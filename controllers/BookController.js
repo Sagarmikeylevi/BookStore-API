@@ -73,3 +73,25 @@ module.exports.getAll = async (req, res) => {
         .json({ error: "An error occurred while fetching the books." });
     }
 }
+
+module.exports.getBookByID = async (req, res) => {
+  try {
+    const bookID = req.params.id;
+
+    // Find the book with the given ID in the database
+    const book = await Book.findById(bookID);
+
+    // If the book is not found, return an error
+    if (!book) {
+      return res.status(404).json({ error: "Book not found." });
+    }
+
+    res.status(200).json({ data: { book } });
+  } catch (error) {
+    console.log(`*****Error: ${error}`);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching the book." });
+  }
+};
+
