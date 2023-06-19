@@ -115,14 +115,14 @@ module.exports.update = async (req, res) => {
         totalQty,
       } = req.body;
 
-      // Find the product by ID in the database
+      // Find the book by ID in the database
       const book = await Book.findById(bookId);
 
       if (!book) {
         return res.status(404).json({ error: "Book not found." });
       }
 
-      // Update the product properties
+      // Update the book properties
       book.title = title;
       book.author = author;
       book.summary = summary;
@@ -144,7 +144,7 @@ module.exports.update = async (req, res) => {
         book.imageURL = imagePath;
       }
 
-      // Save the updated product
+      // Save the updated book
       await book.save();
 
       res.status(200).json({ message: "Book updated successfully." });
@@ -156,3 +156,33 @@ module.exports.update = async (req, res) => {
       .json({ error: "An error occurred while updating the book." });
   }
 };
+
+
+module.exports.delete = async (req, res) => {
+  try {
+    const { bookId } = req.params;
+
+    // Find the book by ID in the database
+    const book = await Book.findById(bookId);
+
+    if (!book) {
+      return res.status(404).json({ error: "Product not found." });
+    }
+
+    // Delete the book image file
+    if (book.imageURL) {
+      fs.unlinkSync(book.imageURL);
+    }
+
+    // Delete the book from the database
+    await Book.findByIdAndDelete(bookId);
+
+    res.status(200).json({ message: "Book deleted successfully." });
+  } catch (error) {
+    console.log(`*****Error: ${error}`);
+    res
+      .status(500)
+      .json({ error: "An error occurred while deleting the book." });
+  }
+};
+
