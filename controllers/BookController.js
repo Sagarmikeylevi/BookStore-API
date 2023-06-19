@@ -1,5 +1,6 @@
 const Book = require("../models/Book");
 require("dotenv").config();
+const fs = require("fs");
 
 module.exports.add = async (req, res) => {
   try {
@@ -53,26 +54,23 @@ module.exports.add = async (req, res) => {
     });
   } catch (error) {
     console.log(`*****Error: ${error}`);
-    res
-      .status(500)
-      .json({ error: "An error occurred while adding the book." });
+    res.status(500).json({ error: "An error occurred while adding the book." });
   }
 };
 
-
 module.exports.getAll = async (req, res) => {
-    try {
-      // Retrieve all products from the database
-      const books = await Book.find();
+  try {
+    // Retrieve all products from the database
+    const books = await Book.find();
 
-      res.status(200).json({ data: { books } });
-    } catch (error) {
-      console.log(`*****Error: ${error}`);
-      res
-        .status(500)
-        .json({ error: "An error occurred while fetching the books." });
-    }
-}
+    res.status(200).json({ data: { books } });
+  } catch (error) {
+    console.log(`*****Error: ${error}`);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching the books." });
+  }
+};
 
 module.exports.getBookByID = async (req, res) => {
   try {
@@ -95,3 +93,66 @@ module.exports.getBookByID = async (req, res) => {
   }
 };
 
+module.exports.update = async (req, res) => {
+  try {
+    Book.uploadedImage(req, res, async (err) => {
+      if (req.body.adminID !== process.env.ADMIN_ID) {
+        return res.status(401).json({ error: "Unauthorized Access" });
+      }
+      if (err) {
+        console.log(`*****Multer Error: ${err}`);
+        return res.status(500).json({ error: "Image upload failed." });
+      }
+      const { bookId } = req.params;
+      const {
+        title,
+        author,
+        summary,
+        price,
+        genres,
+        featured,
+        bestSeller,
+        totalQty,
+      } = req.body;
+
+      // Find the product by ID in the database
+      const book = await Book.findById(bookId);
+
+      if (!book) {
+        return res.status(404).json({ error: "Book not found." });
+      }
+
+      // Update the product properties
+      book.title = title;
+      book.author = author;
+      book.summary = summary;
+      book.price = price;
+      book.genres = genres;
+      book.featured = featured;
+      book.bestSeller = bestSeller;
+      book.totalQty = totalQty;
+
+      if (req.file) {
+        // If a new image is uploaded, update the image path
+        const imagePath = req.file.path;
+
+        // Delete the previous image file
+        if (book.imageURL) {
+          fs.unlinkSync(book.imageURL);
+        }
+
+        book.imageURL = imagePath;
+      }
+
+      // Save the updated product
+      await book.save();
+
+      res.status(200).json({ message: "Book updated successfully." });
+    });
+  } catch (error) {
+    console.log(`*****Error: ${error}`);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the book." });
+  }
+};
