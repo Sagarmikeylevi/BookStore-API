@@ -7,6 +7,8 @@ const mongoose = require("./config/mongoose");
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.use("/", require("./routes"));
+
 app.get("/", (req, res) => {
   res.send("Working fine");
 });
