@@ -58,3 +58,18 @@ module.exports.add = async (req, res) => {
       .json({ error: "An error occurred while adding the book." });
   }
 };
+
+
+module.exports.getAll = async (req, res) => {
+    try {
+      // Retrieve all products from the database
+      const books = await Book.find();
+
+      res.status(200).json({ data: { books } });
+    } catch (error) {
+      console.log(`*****Error: ${error}`);
+      res
+        .status(500)
+        .json({ error: "An error occurred while fetching the books." });
+    }
+}
