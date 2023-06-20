@@ -52,3 +52,33 @@ module.exports.getBooks = async (req, res) => {
   }
 };
 
+module.exports.update = async (req, res) => {
+  try {
+    const { cartItemId } = req.params;
+    const { totalQty } = req.body;
+
+    const updatedCart = await Cart.findByIdAndUpdate(
+      cartItemId,
+      { totalQty },
+      { new: true }
+    );
+
+    if (!updatedCart) {
+      return res.status(404).json({ error: "Cart item not found." });
+    }
+
+    res.status(200).json({
+      message: "Successfully updated cart item",
+      data: {
+        cartItem: updatedCart,
+      },
+    });
+  } catch (error) {
+    console.log(`*****Error: ${error}`);
+    res
+      .status(500)
+      .json({ error: "An error occurred while updating the cart item." });
+  }
+};
+
+

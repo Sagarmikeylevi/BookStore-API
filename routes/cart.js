@@ -16,4 +16,10 @@ router.get(
   CartController.getBooks
 );
 
+router.put(
+  "/update/:cartItemId",
+  passport.authenticate("jwt", { session: false }),
+  CartController.update
+);
+
 module.exports = router;
