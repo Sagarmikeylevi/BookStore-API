@@ -10,4 +10,10 @@ router.post(
   CartController.addBooks
 );
 
+router.get(
+  "/getBooks",
+  passport.authenticate("jwt", { session: false }),
+  CartController.getBooks
+);
+
 module.exports = router;

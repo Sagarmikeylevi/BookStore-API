@@ -34,3 +34,21 @@ module.exports.addBooks = async (req, res) => {
     res.status(500).json({ error: "An error occurred while adding the book to the cart." });
   }
 };
+
+module.exports.getBooks = async (req, res) => {
+  try {
+    const cartItems = await Cart.find();
+    res.status(200).json({
+      message: "Successfully retrieved cart items",
+      data: {
+        cartItems,
+      },
+    });
+  } catch (error) {
+    console.log(`*****Error: ${error}`);
+    res
+      .status(500)
+      .json({ error: "An error occurred while retrieving cart items." });
+  }
+};
+
