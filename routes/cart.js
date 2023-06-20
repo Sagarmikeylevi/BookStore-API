@@ -22,4 +22,9 @@ router.put(
   CartController.update
 );
 
+router.delete(
+  "/delete/:cartItemId",
+  passport.authenticate("jwt", { session: false }),
+  CartController.delete
+);
 module.exports = router;

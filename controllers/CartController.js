@@ -1,4 +1,5 @@
 const Cart = require("../models/Cart");
+const fs = require("fs");
 
 module.exports.addBooks = async (req, res) => {
   try {
@@ -81,4 +82,30 @@ module.exports.update = async (req, res) => {
   }
 };
 
+module.exports.delete = async (req, res) => {
+  try {
+    const { cartItemId } = req.params;
+
+
+    const item = await Cart.findById(cartItemId);
+
+    if (!item) {
+      return res.status(404).json({ error: "Item not found." });
+    }
+
+    if (item.imageURL) {
+      fs.unlinkSync(item.imageURL);
+    }
+
+
+    await Cart.findByIdAndDelete(cartItemId);
+
+    res.status(200).json({ message: "Successfully removed cart item" });
+  } catch (error) {
+    console.log(`*****Error: ${error}`);
+    res
+      .status(500)
+      .json({ error: "An error occurred while deleting the item." });
+  }
+};
 
