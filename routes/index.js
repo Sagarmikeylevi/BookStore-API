@@ -7,6 +7,7 @@ router.get("/api/v1", HomeController.home);
 
 router.use("/api/user", require("./user"));
 router.use("/api/book", require("./book"));
+router.use("/api/cart", require("./cart"));
 
 console.log("Routes are running fine");
 module.exports = router;
