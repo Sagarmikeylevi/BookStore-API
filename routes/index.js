@@ -3,7 +3,7 @@ const router = express.Router();
 
 const HomeController = require("../controllers/HomeController");
 
-router.get("/api", HomeController.home);
+router.get("/", HomeController.home);
 
 router.use("/api/user", require("./user"));
 router.use("/api/book", require("./book"));

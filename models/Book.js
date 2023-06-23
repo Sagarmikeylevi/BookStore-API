@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const multer = require("multer");
 const path = require("path");
 
-const IMAGE_PATH = path.join("/uploads/image");
+const IMAGE_PATH = path.join("/uploads/images");
 
 const bookSchema = new mongoose.Schema(
   {
@@ -53,9 +53,7 @@ let storage = multer.diskStorage({
     cb(null, path.join(__dirname, "..", IMAGE_PATH));
   },
   filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-
-    cb(null, file.fieldname + "-" + uniqueSuffix);
+    cb(null, Date.now() + "-" + file.originalname);
   },
 });
 

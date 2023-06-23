@@ -26,7 +26,7 @@ module.exports.add = async (req, res) => {
       } = req.body;
 
       // Retrieve the file path of the uploaded image
-      const imagePath = req.file.path;
+      const imagePath = req.file.filename;
 
       // Create a new product instance
       const newBook = new Book({
