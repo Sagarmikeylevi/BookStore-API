@@ -1,38 +1,51 @@
+const Book = require("../models/Book");
 const Cart = require("../models/Cart");
-const fs = require("fs");
 
 module.exports.addBooks = async (req, res) => {
   try {
-    Cart.uploadedImage(req, res, async (err) => {
-      if (err) {
-        console.log(`*****Multer Error: ${err}`);
-        return res.status(500).json({ error: "Image upload failed." });
-      }
+    const { bookId, qty } = req.body;
 
-      const { title, author, price, totalQty, totalPrice } = req.body;
+    // Check if the bookId already exists in the cart
+    const existingCartItem = await Cart.findOne({ bookId });
 
-      const imagePath = req.file.path;
+    if (existingCartItem) {
+      return res
+        .status(400)
+        .json({ error: "The book is already in the cart." });
+    }
 
-      const newCart = new Cart({
-        imageURL: imagePath,
-        title,
-        author,
-        price,
-        totalQty,
-        totalPrice,
-      });
+    const book = await Book.findById(bookId);
+    if (!book) {
+      return res.status(404).json({ error: "Book not found." });
+    }
 
-      newCart.save();
-      res.status(200).json({
-        message: "Successfully added to the cart",
-        data: {
-          cartItems: newCart,
-        },
-      });
+    // Update the totalQty of the book
+    book.totalQty -= qty;
+    await book.save();
+
+    const cartItem = new Cart({
+      bookId,
+      imageURL: book.imageURL,
+      title: book.title,
+      author: book.author,
+      price: book.price,
+      totalQty: qty,
+      totalPrice: book.price * qty,
+    });
+
+    await cartItem.save();
+
+    res.status(200).json({
+      message: "A new book is added to the cart",
+      data: {
+        Item: cartItem,
+      },
     });
   } catch (error) {
     console.log(`*****Error: ${error}`);
-    res.status(500).json({ error: "An error occurred while adding the book to the cart." });
+    res.status(500).json({
+      error: "An error occurred while adding the book to the cart.",
+    });
   }
 };
 
@@ -55,24 +68,33 @@ module.exports.getBooks = async (req, res) => {
 
 module.exports.update = async (req, res) => {
   try {
-    const { cartItemId } = req.params;
-    const { totalQty } = req.body;
+    const { cartId } = req.params;
+    const { changes } = req.body;
+    const cart = await Cart.findById(cartId).populate("bookId").exec();
 
-    const updatedCart = await Cart.findByIdAndUpdate(
-      cartItemId,
-      { totalQty },
-      { new: true }
-    );
-
-    if (!updatedCart) {
-      return res.status(404).json({ error: "Cart item not found." });
+    if (!cart) {
+      return res.status(404).json({ error: "Item not found." });
     }
 
+    const bookID = cart.bookId._id;
+    const book = await Book.findById(bookID);
+
+    if (changes === "increment") {
+      book.totalQty -= 1;
+      cart.totalQty += 1;
+    } else if (changes === "decrement") {
+      book.totalQty += 1;
+      cart.totalQty -= 1;
+    } else {
+      throw new Error(
+        "Invalid 'changes' value. Allowed values: 'increment' or 'decrement'."
+      );
+    }
+
+    await book.save();
+    await cart.save();
     res.status(200).json({
-      message: "Successfully updated cart item",
-      data: {
-        cartItem: updatedCart,
-      },
+      message: "Successfully updated cart items",
     });
   } catch (error) {
     console.log(`*****Error: ${error}`);
@@ -84,21 +106,22 @@ module.exports.update = async (req, res) => {
 
 module.exports.delete = async (req, res) => {
   try {
-    const { cartItemId } = req.params;
+    const { cartId } = req.params;
 
+    const cart = await Cart.findById(cartId).populate("bookId").exec();
 
-    const item = await Cart.findById(cartItemId);
-
-    if (!item) {
+    if (!cart) {
       return res.status(404).json({ error: "Item not found." });
     }
 
-    if (item.imageURL) {
-      fs.unlinkSync(item.imageURL);
-    }
+    const bookID = cart.bookId._id;
+    const book = await Book.findById(bookID);
 
+    book.totalQty += cart.totalQty;
 
-    await Cart.findByIdAndDelete(cartItemId);
+    await book.save();
+
+    await Cart.findByIdAndDelete(cartId);
 
     res.status(200).json({ message: "Successfully removed cart item" });
   } catch (error) {
@@ -108,4 +131,3 @@ module.exports.delete = async (req, res) => {
       .json({ error: "An error occurred while deleting the item." });
   }
 };
-

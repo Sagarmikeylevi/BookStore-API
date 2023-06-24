@@ -4,27 +4,12 @@ const passport = require("passport");
 
 const CartController = require("../controllers/CartController");
 
-router.post(
-  "/addBooks",
-  passport.authenticate("jwt", { session: false }),
-  CartController.addBooks
-);
+router.post("/addBooks", CartController.addBooks);
 
-router.get(
-  "/getBooks",
-  passport.authenticate("jwt", { session: false }),
-  CartController.getBooks
-);
+router.get("/getBooks", CartController.getBooks);
 
-router.put(
-  "/update/:cartItemId",
-  passport.authenticate("jwt", { session: false }),
-  CartController.update
-);
+router.put("/update/:cartId", CartController.update);
 
-router.delete(
-  "/delete/:cartItemId",
-  passport.authenticate("jwt", { session: false }),
-  CartController.delete
-);
+router.delete("/delete/:cartId", CartController.delete);
+
 module.exports = router;
