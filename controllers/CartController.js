@@ -29,7 +29,8 @@ module.exports.addBooks = async (req, res) => {
       title: book.title,
       author: book.author,
       price: book.price,
-      totalQty: qty,
+      totalQty: book.totalQty,
+      Qty: qty,
       totalPrice: book.price * qty,
     });
 
@@ -69,7 +70,7 @@ module.exports.getBooks = async (req, res) => {
 module.exports.update = async (req, res) => {
   try {
     const { cartId } = req.params;
-    const { changes } = req.body;
+    const { totalQty, Qty } = req.body;
     const cart = await Cart.findById(cartId).populate("bookId").exec();
 
     if (!cart) {
@@ -79,20 +80,13 @@ module.exports.update = async (req, res) => {
     const bookID = cart.bookId._id;
     const book = await Book.findById(bookID);
 
-    if (changes === "increment") {
-      book.totalQty -= 1;
-      cart.totalQty += 1;
-    } else if (changes === "decrement") {
-      book.totalQty += 1;
-      cart.totalQty -= 1;
-    } else {
-      throw new Error(
-        "Invalid 'changes' value. Allowed values: 'increment' or 'decrement'."
-      );
-    }
+    book.totalQty = totalQty;
+    cart.totalQty = totalQty;
+    cart.Qty = Qty;
 
-    await book.save();
     await cart.save();
+    await book.save();
+    
     res.status(200).json({
       message: "Successfully updated cart items",
     });
