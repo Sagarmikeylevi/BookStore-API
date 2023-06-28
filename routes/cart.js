@@ -11,7 +11,7 @@ router.post(
 );
 
 router.get(
-  "/getBooks",
+  "/getBooks/:userId",
   passport.authenticate("jwt", { session: false }),
   CartController.getBooks
 );

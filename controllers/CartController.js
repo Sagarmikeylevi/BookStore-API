@@ -62,11 +62,21 @@ module.exports.addBooks = async (req, res) => {
 
 module.exports.getBooks = async (req, res) => {
   try {
-    const cartItems = await Cart.find();
+    const { userId } = req.params;
+    const userCart = await UserCart.findOne({ user: userId });
+
+    const cartItems = userCart.cartItems;
+
+    const items = [];
+
+    for (let cartItem of cartItems) {
+      const item = await Cart.findById(cartItem);
+      items.push(item);
+    }
     res.status(200).json({
       message: "Successfully retrieved cart items",
       data: {
-        cartItems,
+        items,
       },
     });
   } catch (error) {
