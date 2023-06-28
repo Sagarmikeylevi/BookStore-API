@@ -23,7 +23,7 @@ router.put(
 );
 
 router.delete(
-  "/delete/:cartId",
+  "/delete/:cartId/:userId",
   passport.authenticate("jwt", { session: false }),
   CartController.delete
 );

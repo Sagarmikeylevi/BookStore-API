@@ -90,7 +90,7 @@ module.exports.getBooks = async (req, res) => {
 module.exports.update = async (req, res) => {
   try {
     const { cartId } = req.params;
-    const { totalQty, Qty } = req.body;
+    const { mode } = req.body;
     const cart = await Cart.findById(cartId).populate("bookId").exec();
 
     if (!cart) {
@@ -100,9 +100,19 @@ module.exports.update = async (req, res) => {
     const bookID = cart.bookId._id;
     const book = await Book.findById(bookID);
 
-    book.totalQty = totalQty;
-    cart.totalQty = totalQty;
-    cart.Qty = Qty;
+    if(mode === "plus") {
+      if(book.totalQty  === 0) {
+        return res.status(404).json({error: "Out of stock"})
+      }
+
+      book.totalQty -= 1;
+      cart.totalQty = book.totalQty;
+      cart.Qty += 1;
+    } else {
+      book.totalQty += 1;
+      cart.totalQty = book.totalQty;
+      cart.Qty -= 1;
+    }
 
     await cart.save();
     await book.save();
@@ -120,7 +130,16 @@ module.exports.update = async (req, res) => {
 
 module.exports.delete = async (req, res) => {
   try {
+    const { userId } = req.params;
     const { cartId } = req.params;
+
+    const userCart = await UserCart.findOne({ user: userId });
+
+    userCart.cartItems = userCart.cartItems.filter(
+      (item) => item.toString() !== cartId.toString()
+    );
+
+    userCart.save();
 
     const cart = await Cart.findById(cartId).populate("bookId").exec();
 
