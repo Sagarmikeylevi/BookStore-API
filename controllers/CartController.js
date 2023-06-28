@@ -1,17 +1,25 @@
 const Book = require("../models/Book");
 const Cart = require("../models/Cart");
+const UserCart = require("../models/UserCart");
 
 module.exports.addBooks = async (req, res) => {
   try {
+    const { userId } = req.params;
     const { bookId, qty } = req.body;
 
-    // Check if the bookId already exists in the cart
-    const existingCartItem = await Cart.findOne({ bookId });
+    let userCart = await UserCart.findOne({ user: userId });
 
-    if (existingCartItem) {
-      return res
-        .status(400)
-        .json({ error: "The book is already in the cart." });
+    if (!userCart) {
+      userCart = await UserCart.create({ user: userId });
+    }
+
+    const items = userCart.cartItems;
+
+    for (let item of items) {
+      const cart = await Cart.findById(item);
+      if (cart.bookId.toString() === bookId) {
+        return res.status(409).json({ error: "The book is already there" });
+      }
     }
 
     const book = await Book.findById(bookId);
@@ -33,8 +41,10 @@ module.exports.addBooks = async (req, res) => {
       Qty: qty,
       totalPrice: book.price * qty,
     });
-
     await cartItem.save();
+
+    userCart.cartItems.push(cartItem);
+    await userCart.save();
 
     res.status(200).json({
       message: "A new book is added to the cart",
@@ -86,7 +96,7 @@ module.exports.update = async (req, res) => {
 
     await cart.save();
     await book.save();
-    
+
     res.status(200).json({
       message: "Successfully updated cart items",
     });
@@ -111,7 +121,7 @@ module.exports.delete = async (req, res) => {
     const bookID = cart.bookId._id;
     const book = await Book.findById(bookID);
 
-    book.totalQty += cart.totalQty;
+    book.totalQty += cart.Qty;
 
     await book.save();
 

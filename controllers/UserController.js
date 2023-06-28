@@ -18,6 +18,7 @@ module.exports.createSession = async (req, res) => {
         token: jwt.sign(user.toJSON(), process.env.SECRET_KEY, {
           expiresIn: "1000000",
         }),
+        userId: user._id,
       },
     });
   } catch (err) {
@@ -32,7 +33,12 @@ module.exports.register = async (req, res) => {
   try {
     let existingUser = await User.findOne({ email: req.body.email });
     if (!existingUser) {
-      await User.create(req.body);
+      const newUser = new User({
+        name: req.body.name,
+        email: req.body.email,
+        password: req.body.password,
+      });
+      await newUser.save();
       return res.status(200).json({
         message: "Registered successfully",
       });
