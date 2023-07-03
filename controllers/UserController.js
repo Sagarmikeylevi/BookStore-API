@@ -7,18 +7,17 @@ module.exports.createSession = async (req, res) => {
     let user = await User.findOne({ email: req.body.email });
 
     if (!user || user.password != req.body.password) {
-      return res.status(422).json({
-        message: "Invalid username or password",
-      });
+      return res.status(422).json("Invalid username or password");
     }
 
     return res.status(200).json({
       message: "Sign in successful, here is your token, Please keep it safe!",
       data: {
         token: jwt.sign(user.toJSON(), process.env.SECRET_KEY, {
-          expiresIn: "1000000",
+          expiresIn: "1h",
         }),
         userId: user._id,
+        username: user.name,
       },
     });
   } catch (err) {
@@ -43,9 +42,9 @@ module.exports.register = async (req, res) => {
         message: "Registered successfully",
       });
     } else {
-      return res.status(409).json({
-        error: "A user with the same email address already exists",
-      });
+      return res
+        .status(409)
+        .json("A user with the same email address already exists");
     }
   } catch (err) {
     console.log("******", err);

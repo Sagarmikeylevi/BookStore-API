@@ -28,4 +28,10 @@ router.delete(
   CartController.delete
 );
 
+router.delete(
+  "/checkout/:userId",
+  passport.authenticate("jwt", { session: false }),
+  CartController.checkOut
+);
+
 module.exports = router;

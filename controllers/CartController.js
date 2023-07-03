@@ -18,13 +18,13 @@ module.exports.addBooks = async (req, res) => {
     for (let item of items) {
       const cart = await Cart.findById(item);
       if (cart.bookId.toString() === bookId) {
-        return res.status(409).json({ error: "The book is already there" });
+        return res.status(409).json("The book is already there");
       }
     }
 
     const book = await Book.findById(bookId);
     if (!book) {
-      return res.status(404).json({ error: "Book not found." });
+      return res.status(404).json("Book not found");
     }
 
     // Update the totalQty of the book
@@ -100,9 +100,9 @@ module.exports.update = async (req, res) => {
     const bookID = cart.bookId._id;
     const book = await Book.findById(bookID);
 
-    if(mode === "plus") {
-      if(book.totalQty  === 0) {
-        return res.status(404).json({error: "Out of stock"})
+    if (mode === "plus") {
+      if (book.totalQty === 0) {
+        return res.status(404).json({ error: "Out of stock" });
       }
 
       book.totalQty -= 1;
@@ -164,3 +164,39 @@ module.exports.delete = async (req, res) => {
       .json({ error: "An error occurred while deleting the item." });
   }
 };
+
+module.exports.checkOut = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const userCart = await UserCart.findOne({ user: userId }).populate(
+      "cartItems"
+    );
+
+    if (!userCart) {
+      return res.status(404).json({ error: "User cart not found" });
+    }
+
+    const cartItems = userCart.cartItems;
+
+    // Calculate the total price of all items in the cart
+    let totalPrice = 0;
+    for (let cartItem of cartItems) {
+      totalPrice += cartItem.totalPrice;
+    }
+
+    // Remove all cart items
+    userCart.cartItems = [];
+    await userCart.save();
+
+    res.status(200).json({
+      message: "Checkout successful",
+      data: {
+        totalPrice: totalPrice,
+      },
+    });
+  } catch (error) {
+    console.log(`*****Error: ${error}`);
+    res.status(500).json({ error: "An error occurred during checkout" });
+  }
+};
+
