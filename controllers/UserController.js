@@ -44,6 +44,7 @@ module.exports.register = async (req, res) => {
     } else {
       return res
         .status(409)
+        
         .json("A user with the same email address already exists");
     }
   } catch (err) {
