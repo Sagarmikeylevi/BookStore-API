@@ -114,6 +114,8 @@ module.exports.update = async (req, res) => {
       cart.Qty -= 1;
     }
 
+    cart.totalPrice = cart.Qty * cart.price;
+
     await cart.save();
     await book.save();
 
@@ -168,6 +170,7 @@ module.exports.delete = async (req, res) => {
 module.exports.checkOut = async (req, res) => {
   try {
     const { userId } = req.params;
+    console.log(userId);
     const userCart = await UserCart.findOne({ user: userId }).populate(
       "cartItems"
     );
@@ -176,15 +179,13 @@ module.exports.checkOut = async (req, res) => {
       return res.status(404).json({ error: "User cart not found" });
     }
 
-    const cartItems = userCart.cartItems;
+    const products = userCart.cartItems;
 
-    // Calculate the total price of all items in the cart
     let totalPrice = 0;
-    for (let cartItem of cartItems) {
-      totalPrice += cartItem.totalPrice;
+    for (let product of products) {
+      totalPrice += product.totalPrice;
     }
 
-    // Remove all cart items
     userCart.cartItems = [];
     await userCart.save();
 
@@ -199,4 +200,3 @@ module.exports.checkOut = async (req, res) => {
     res.status(500).json({ error: "An error occurred during checkout" });
   }
 };
-
